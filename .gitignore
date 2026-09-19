@@ -1,0 +1,43 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- 工具链中间产物（可重新生成；图/表当结果的除外，见 tools/README.md） ----
+*.tmp
+_load_segments.csv
+
+# ---- 上位机打包（build_exe.py 生成，约 83 MB，不进仓库） ----
+# 下面两条不带前导斜杠，所以任意层级都匹配 —— 本地叫 脚本/、开源后叫 tools/ 都盖得住
+_build/
+上位机/
+*.spec
+
+# ---- 嵌入式工程 / IDE ----
+Debug/
+Release/
+build/
+*.o
+*.d
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+.settings/
+.project
+.cproject
+.launch/
+*.uvprojx
+*.uvoptx
+*.ioc
+MDK-ARM/
+.vscode/
+.idea/
+
+# ---- 操作系统 ----
+.DS_Store
+Thumbs.db
+desktop.ini

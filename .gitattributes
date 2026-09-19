@@ -1,0 +1,23 @@
+# 换行：全仓库统一 LF。
+# 全仓库（含 .c/.h 中文注释）均为 UTF-8 编码；git 只管换行、不管字符集，
+# 所以这里只固定 eol=lf，不要把 working-tree 改成 CRLF。
+
+* text=auto eol=lf
+
+# 源码（UTF-8 中文注释）—— 明确按文本处理，禁止 git 自作聪明判定为二进制
+*.c    text eol=lf
+*.h    text eol=lf
+
+# 文档
+*.md   text eol=lf
+*.txt  text eol=lf
+
+# Python 工具链
+*.py         text eol=lf
+
+# 二进制
+*.png  binary
+*.ico  binary
+*.zip  binary
+*.rar  binary
+*.pdf  binary

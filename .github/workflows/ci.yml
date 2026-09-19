@@ -1,0 +1,94 @@
+# CI —— 三道门：
+#   1. firmware: gcc -std=c99 -Wall -Wextra -Werror 编译算法库，
+#      覆盖功能开关组合（掉电保持 × 在线调参 × 无 libm × 无时基）
+#   2. encoding: 全仓库文本文件必须能按 UTF-8 解码（防编码回退，本库吃过编码的亏）
+#   3. consts:   固件 ↔ PC 脚本常量对拍（脚本/test/check_consts.py，纯标准库）
+#
+# 说明：check_consts 在纯 git checkout 下运行时，上位机/ 相关条目会打 SKIP
+# （该目录是打包产物，被 .gitignore 排除），属预期行为，不算失败。
+
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  firmware:
+    name: gcc build (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: core
+            cfg: ""
+          - name: core+nvm
+            cfg: "-DBMS_USE_NVM=1"
+          - name: core+tune
+            cfg: "-DBMS_USE_TUNE=1"
+          - name: full-no-libm-no-tick
+            cfg: "-DBMS_USE_NVM=1 -DBMS_USE_TUNE=1 -DBMS_USE_LIBM_EXPF=0 -DBMS_USE_TICK=0"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile library (all 6 translation units, every combo)
+        run: |
+          SRC="算法库/bms_port.c 算法库/bms_cal.c 算法库/soc.c 算法库/soh.c 算法库/bms_nvm.c 算法库/bms_tune.c"
+          gcc -std=c99 -Wall -Wextra -Werror -I算法库 ${{ matrix.cfg }} -c $SRC
+      - name: Link a stub executable (catches missing-symbol regressions)
+        run: |
+          cat > stub_main.c <<'EOF'
+          #include "bms_algo.h"
+          uint32_t BMS_Port_GetTickMs(void) { static uint32_t ms; return ms += 1; }
+          int sample(int32_t *v, int32_t *i, int32_t *t) { (void)v; (void)i; (void)t; return 0; }
+          int main(void)
+          {
+              int32_t v, i, t;
+              BMS_CAL_Init(); SOH_Init();
+          #if BMS_USE_NVM
+              BMS_NVM_Init(); BMS_NVM_Task();
+          #endif
+              (void)sample(&v, &i, &t);
+              BMS_CAL_Update(t); SOC_AhUpdate(v, i); SOH_Update(v, i, t);
+              return (int)SOC_GetPercent() + (int)SOH_GetPercent() > -1 ? 0 : 1;
+          }
+          EOF
+          gcc -std=c99 -Wall -Wextra -Werror -I算法库 stub_main.c \
+              算法库/bms_port.c 算法库/bms_cal.c 算法库/soc.c 算法库/soh.c \
+              算法库/bms_nvm.c 算法库/bms_tune.c -o stub_bms -lm \
+              ${{ matrix.cfg }}
+          ./stub_bms && echo "stub executable ran OK"
+
+  encoding:
+    name: utf-8 hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every text file must decode as UTF-8
+        run: |
+          python3 - <<'EOF'
+          import os, sys
+          BIN_EXT = {'.png', '.ico', '.zip', '.exe', '.dll', '.pyd', '.pyc',
+                     '.ttf', '.otf', '.afm', '.so', '.a', '.bin', '.elf', '.jpg'}
+          bad = []
+          for root, dirs, files in os.walk('.'):
+              dirs[:] = [d for d in dirs if d not in ('.git', '_internal', '__pycache__')]
+              for f in files:
+                  p = os.path.join(root, f)
+                  if os.path.splitext(f)[1].lower() in BIN_EXT:
+                      continue
+                  try:
+                      open(p, encoding='utf-8').read()
+                  except UnicodeDecodeError as e:
+                      bad.append('%s: %s' % (p, e))
+          if bad:
+              print('\n'.join(bad)); sys.exit(1)
+          print('all text files are valid UTF-8')
+          EOF
+
+  consts:
+    name: firmware ↔ PC constant cross-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 脚本/test/check_consts.py
