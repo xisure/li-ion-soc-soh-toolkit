@@ -53,7 +53,29 @@ jobs:
               return (int)SOC_GetPercent() + (int)SOH_GetPercent() > -1 ? 0 : 1;
           }
           EOF
-          gcc -std=c99 -Wall -Wextra -Werror -I算法库 stub_main.c \
+          # 主机侧 NVM 移植层 stub (RAM 模拟, 2 槽) —— bms_nvm.c 引用的 3 个
+          # 移植函数在真实板上由 移植示例/port_nvm_*.c 提供, CI 链接必须有定义。
+          # 不带 -DBMS_USE_NVM 时 bms_nvm.c 内容整体被条件编译剔除, 该文件为空定义, 无害。
+          cat > stub_nvm.c <<'EOF'
+          #include "bms_nvm.h"
+          #include <string.h>
+          #define STUB_SLOTS 2u
+          static uint8_t nvm_ram[STUB_SLOTS][BMS_NVM_BLOCK_LEN];
+          uint8_t BMS_NVM_SlotCount(void) { return (uint8_t)STUB_SLOTS; }
+          uint8_t BMS_NVM_SlotRead(uint8_t slot, void *buf, uint32_t len)
+          {
+              if (slot >= STUB_SLOTS || len > BMS_NVM_BLOCK_LEN) return 0u;
+              memcpy(buf, nvm_ram[slot], len);
+              return 1u;
+          }
+          uint8_t BMS_NVM_SlotWrite(uint8_t slot, const void *buf, uint32_t len)
+          {
+              if (slot >= STUB_SLOTS || len > BMS_NVM_BLOCK_LEN) return 0u;
+              memcpy(nvm_ram[slot], buf, len);
+              return 1u;
+          }
+          EOF
+          gcc -std=c99 -Wall -Wextra -Werror -I算法库 stub_main.c stub_nvm.c \
               算法库/bms_port.c 算法库/bms_cal.c 算法库/soc.c 算法库/soh.c \
               算法库/bms_nvm.c 算法库/bms_tune.c -o stub_bms -lm \
               ${{ matrix.cfg }}
