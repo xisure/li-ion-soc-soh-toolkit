@@ -64,8 +64,8 @@ approximation). No dynamic memory, no recursion, max stack frame < 64 B.
 │                         porting guides, protocol spec, 8 port examples
 ├── 脚本/      (scripts)   PC toolchain — acquisition, load control, fitting,
 │                         SOH verification, EKF tuning, GUI + sample data
-└── 上位机/    (host app)  PyInstaller-packaged GUI exe (git-ignored build
-                          artifact, not source)
+└── 上位机/    (host app)  Ready-to-run PyInstaller build of the GUI exe
+                          (Windows x64, no Python needed, shipped in-repo)
 ```
 
 ## Thirty-second start

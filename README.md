@@ -47,7 +47,7 @@
 │   ├── requirements.txt     依赖清单：pyserial / numpy / matplotlib / Pillow（打包加 pyinstaller）
 │   └── stair1*.csv          示例实测数据（不可再生）
 │
-└── 上位机/              PC 工具链的打包产物（build_exe.py 生成，不进仓库）
+└── 上位机/              PC 工具链的打包成品（免安装，Windows x64，已在仓库内）
     ├── 锂电池上位机.exe     ★ 不想敲命令就双击这个
     ├── _internal/          解释器 + numpy + matplotlib + tcl/tk
     └── tools/              脚本副本，exe 优先用这一份（改了立刻生效）

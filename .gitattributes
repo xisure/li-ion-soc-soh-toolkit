@@ -21,3 +21,11 @@
 *.zip  binary
 *.rar  binary
 *.pdf  binary
+
+# 上位机打包产物 (PyInstaller) —— 显式声明, 禁止行尾转换损坏可执行文件
+*.exe  binary
+*.dll  binary
+*.pyd  binary
+*.so   binary
+*.tcl  binary
+*.lib  binary

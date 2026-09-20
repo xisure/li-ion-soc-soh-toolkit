@@ -1,0 +1,9 @@
+# 运行命令行工具 / 上位机需要的第三方库
+pyserial>=3.5
+numpy>=1.26
+matplotlib>=3.8
+# Pillow 只有上位机用：把脚本落盘的 PNG 缩放后嵌进窗口显示
+Pillow>=10.0
+
+# 只有 build_exe.py 打包 exe 时才需要
+pyinstaller>=6.10
