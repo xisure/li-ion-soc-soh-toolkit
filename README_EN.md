@@ -10,8 +10,8 @@ characterization, parameter identification, and offline verification.
 > project's primary audience). Code comments are in Chinese as well. This
 > file covers the essentials in English; see the linked documents for details.
 
-Reference hardware: a single 18650 cell (NCR18650GA / 18650-3350D, 3350 mAh)
-+ a CH32X035 acquisition board (INA226 + NTC + SSD1306) + a programmable
+Reference hardware: 18650 cell (18650-3350D, 3350 mAh)
++ a acquisition board (INA226 + NTC ) + a programmable
 electronic load or power supply (RS-232 / SCPI). **The library itself is not
 bound to this hardware** — it only needs one platform function. The load
 control scripts use generic SCPI root commands; a different instrument brand
